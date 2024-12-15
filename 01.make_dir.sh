@@ -59,25 +59,25 @@ do
         for ((d=1; d<=$days; d++))
         do
             day=$(printf "%02d" $d)
-            ./wrf_setup -d "${month}_${day}"
+            bash wrf_setup -d "${month}_${day}"
         done
     elif [ "$m" -eq "$start_month" ]; then
         for ((d=1; d<=$days; d++))
         do
             day=$(printf "%02d" $d)
-            ./wrf_setup -d "${month}_${day}"
+            bash wrf_setup -d "${month}_${day}"
         done
     elif [ "$m" -eq "$end_month" ]; then
         for ((d=1; d<=$days; d++))
         do
             day=$(printf "%02d" $d)
-            ./wrf_setup -d "${month}_${day}"
+            bash wrf_setup -d "${month}_${day}"
         done
     else
         for ((d=1; d<=$days; d++))
         do
             day=$(printf "%02d" $d)
-            ./wrf_setup -d "${month}_${day}"
+            bash wrf_setup -d "${month}_${day}"
         done
     fi
 done
