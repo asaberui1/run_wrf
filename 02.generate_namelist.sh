@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: bash script.sh --month=01(:12) --year=xxxx
+# Usage: bash script.sh --month=01(:12) --year=xxxx --path=/directory/to/met_em/
 
 # Parse command line arguments
 for arg in "$@"
@@ -17,6 +17,10 @@ do
         --year=*)
         year="${arg#*=}"
         ;;
+        --path=*)
+        path="${arg#*=}"
+        path_new=$(echo "$path" | sed 's/\//\\\//g')
+        ;;
     esac
 done
 
@@ -29,6 +33,12 @@ fi
 # Check if year argument is provided
 if [ -z "$year" ]; then
     echo "Please provide a year using --year=xxxx"
+    exit 1
+fi
+
+# Check if path argument is provided
+if [ -z "$path" ]; then
+    echo "Please provide a path using --path=/directory/to/met_em/"
     exit 1
 fi
 
@@ -50,6 +60,11 @@ do
         sed -i "s/MS/${ms}/g" namelist.input
         sed -i "s/DE/${de}/g" namelist.input
         sed -i "s/ME/${me}/g" namelist.input
+        sed -i "s/PATHPATHPATH/${path_new}/g" namelist.input
         mv namelist.input ${m}_${day}/namelist.input
     done
 done
+
+if [ -f "./namelist.input" ]; then
+    rm ./namelist.input
+fi
