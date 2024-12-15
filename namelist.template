@@ -28,7 +28,7 @@ io_form_boundary         = 2,
 debug_level              = 0,
 !auxinput11_interval_s               = 3600, 3600, 3600,3600,3600,
 !auxinput11_end_h                    = 36000,36000,36000,36000,36000,
-auxinput1_inname                   ="/data9/huangty/WRF/run_wps_new/met_em.d<domain>.<date>"
+auxinput1_inname                   ="PATHPATHPATH/met_em.d<domain>.<date>"
 &domains                 
 eta_levels               = 1.000, 0.996, 0.99, 0.98, 0.97,
                            0.96, 0.95, 0.94, 0.93, 0.92, 
