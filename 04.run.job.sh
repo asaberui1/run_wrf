@@ -1,28 +1,51 @@
 #!/bin/bash
-#PBS -N 04.wrf-fnl-2022
-#PBS -o wrf.04.o
-#PBS -e wrf.04.e
-#PBS -l walltime=100:00:00
-#PBS -l nodes=1:ppn=8
+# Usage: bash script.sh --month=01(:12) --year=xxxx
 
-#cd $PBS_O_WORKDIR
-
-year=2016
-#for mm in 02
-#for mm in 04 06 09 11
-#for mm in 01 03 05 07 08 10 12
-for mm in 11
+for arg in "$@"
 do
-#for day in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28
-for day in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
-#for day in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
-
-do
-  cp wrf.job.template wrf.job.1
-  sed -i "s/MM/${mm}/g" wrf.job.1 
-  sed -i "s/DD/${day}/g" wrf.job.1 
-  sed -i "s/YY/${year}/g" wrf.job.1 
-  mv wrf.job.1 ${mm}_${day}/wrf.job
-  cp wrf.sh ${mm}_${day}/wrf.sh
+    case $arg in
+        --month=*)
+        months="${arg#*=}"
+        if [[ $months == *":"* ]]; then
+            IFS=":" read -r start_month end_month <<< "$months"
+        else
+            start_month=$months
+            end_month=$months
+        fi
+        ;;
+        --year=*)
+        year="${arg#*=}"
+        ;;
+        --data=*)
+        data="${arg#*=}"
+        ;;
+    esac
 done
+
+# Check if month argument is provided
+if [ -z "$months" ]; then
+    echo "Please provide month(s) using --month=03(:10)"
+    exit 1
+fi
+
+# Check if year argument is provided
+if [ -z "$year" ]; then
+    echo "Please provide a year using --year=xxxx"
+    exit 1
+fi
+
+for (( mm=start_month; mm<=end_month; mm++ ))
+do
+    month=$(printf "%02d" $mm)
+    for day in {01..31}
+    do
+        if [ -d "${month}_${day}" ]; then
+            cp wrf.job.template wrf.job.1
+            sed -i "s/MM/${month}/g" wrf.job.1 
+            sed -i "s/DD/${day}/g" wrf.job.1 
+            sed -i "s/YY/${year}/g" wrf.job.1 
+            mv wrf.job.1 "${month}_${day}/wrf.job"
+            cp wrf.sh "${month}_${day}/wrf.sh"
+        fi
+    done
 done
