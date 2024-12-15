@@ -16,9 +16,6 @@ do
         --year=*)
         year="${arg#*=}"
         ;;
-        --data=*)
-        data="${arg#*=}"
-        ;;
     esac
 done
 
