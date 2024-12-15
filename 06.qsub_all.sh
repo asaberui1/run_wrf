@@ -1,16 +1,36 @@
 #/bin/bash
-for mm in 11
-#for mm in 02
-#for mm in 04 06 09 11
-#for mm in 01 03 05 07 08 10 12
-do
-#for day in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28
-for day in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
-#for day in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+# Usage: bash script.sh --month=01(:12) --year=xxxx
 
+for arg in "$@"
 do
-
-  cd ./${mm}_${day}/; qsub ./wrf.job
-  cd ../
+    case $arg in
+        --month=*)
+        months="${arg#*=}"
+        if [[ $months == *":"* ]]; then
+            IFS=":" read -r start_month end_month <<< "$months"
+        else
+            start_month=$months
+            end_month=$months
+        fi
+        ;;
+    esac
 done
+
+# Check if month argument is provided
+if [ -z "$months" ]; then
+    echo "Please provide month(s) using --month=03(:10)"
+    exit 1
+fi
+
+for (( mm=start_month; mm<=end_month; mm++ ))
+do
+    month=$(printf "%02d" $mm)
+    for day in {01..31}
+    do
+        if [ -d "${month}_${day}" ]; then
+            cd ./${month}_${day}/
+            qsub ./wrf.job
+            cd ..
+        fi
+    done
 done
