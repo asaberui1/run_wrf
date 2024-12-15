@@ -1,0 +1,103 @@
+#!/bin/sh 
+#
+# Setup WRF-4.5.2 run directory
+#
+# RM, Nov. 28, 2007
+# Modified, Jan. 8, 2024
+#
+wrf_name="WRF Model Version 4.5.2 (2024)"
+wrf_conf="Linux x86_64, ifort compiler with icc, Intel MPI, basic nesting"
+#wrf_base=/home/data/zhusq/OMI_project/wrf_model/WRF
+wrf_base=/data9/huangty/backup/WRF-4.5.2-backup/WRF-4.5.2
+relnotes=README.wrf_setup
+syml_exe="wrf.exe real.exe"
+syml_fil="co2_trans CAM_ABS_DATA CAM_AEROPT_DATA CAMtr_volume_mixing_ratio ETAMPNEW_DATA \
+ETAMPNEW_DATA_DBL GENPARM.TBL grib2map.tbl gribmap.txt LANDUSE.TBL ozone.formatted \
+ozone_lat.formatted ozone_plev.formatted README.namelist README.tslist \
+RRTM_DATA RRTM_DATA_DBL RRTMG_LW_DATA RRTMG_LW_DATA_DBL RRTMG_SW_DATA \
+RRTMG_SW_DATA_DBL SOILPARM.TBL tr49t67 tr49t85 tr67t85 URBPARM.TBL VEGPARM.TBL"
+
+#regfiles="namelist.input"
+
+ver=dmpar
+rundir=wrf_run
+while test $# -gt 0
+do
+    case $1 in 
+	-d|--dir)
+	    rundir=$2
+            shift; shift;
+	    ;;
+	-h|--help)
+	    echo ""
+	    echo "Usage: ${0##*/} [OPTIONS]"
+	    echo "Creates a run directory for WRF-4.5.2."
+	    echo ""
+	    echo "OPTIONS:"
+	    echo "    -d, --dir NAME            Specifies the run directory NAME (default: wrf_run)."
+	    echo "    -s, --with-openmp         Uses MPI+OpenMP (default: MPI only)."
+	    echo "    -h, --help                This help."
+	    echo ""
+	    exit 0 ;;
+	-s|--with-openmp)
+	    ver=dm+sm
+	    shift
+	    ;;
+	*)
+	    shift ;;
+    esac
+done
+
+echo "$wrf_name"
+echo "$wrf_conf ($ver)"
+
+#if [ -d $rundir ] ; then
+#    echo "*** Error: directory $rundir already exists"
+#    exit 1
+#fi
+
+echo -n "Creating directory $rundir ... "
+
+mkdir -p $rundir 
+#if [ $? -ne 0 ]; then
+#    echo "Error"
+#    exit 1
+#else
+#    echo "done"
+#fi
+
+echo -n "Accessing directory $rundir ... "
+cd $rundir
+if [ $? -ne 0 ]; then
+    echo "Error"
+    exit 1
+else
+    echo "done"
+fi
+
+wrf_base=$wrf_base
+
+echo "$wrf_name" > $relnotes
+echo "$wrf_conf ($ver)" >> $relnotes
+
+echo -n "Setup run info ... "
+for i in $syml_exe
+do
+    ln -sf $wrf_base/main/$i $i 2>/dev/null || { echo "Error linking $i"; exit 1; }
+done
+
+for i in $syml_fil
+do
+    ln -sf $wrf_base/run/$i $i 2>/dev/null || { echo "Error linking $i"; exit 1; }
+done
+
+
+#for i in $regfiles
+#do
+#    cp $wrf_base/test/em_real/$i $i 2>/dev/null || { echo "Error copying $i"; exit 1; }
+#done
+
+echo "done"
+
+echo "WRF-4.5.2 run directory created successfully."
+exit 0

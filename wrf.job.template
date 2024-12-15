@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=400:00:00
+#PBS -N WRF_YY_MM_DD
+#PBS -q normal
+#PBS -o wrf.o
+#PBS -e wrf.e
+
+# switch to the directory where the PBS job is submitted
+cd $PBS_O_WORKDIR
+
+# this command will run 
+##nohup time /public/software/mpi/openmpi/intel/2.1.2/bin/mpiexec -machinefile machines -n 16 ./wrf.sh &
+
+/public/software/mpi/intelmpi/2017.4.239/intel64/bin/mpiexec -n 16 ./wrf.sh
+
