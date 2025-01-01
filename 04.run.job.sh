@@ -1,6 +1,7 @@
 #!/bin/bash
 # Usage: bash script.sh --month=01(:12) --year=xxxx
 
+# Parse command line arguments
 for arg in "$@"
 do
     case $arg in
@@ -31,17 +32,21 @@ if [ -z "$year" ]; then
     exit 1
 fi
 
-for (( mm=start_month; mm<=end_month; mm++ ))
+# Loop through the specified months
+for (( mm=10#$start_month; mm<=10#$end_month; mm++ ))
 do
-    month=$(printf "%02d" $mm)
+    month=$(printf "%02d" $mm)  # Format month with leading zero
     for day in {01..31}
     do
         if [ -d "${month}_${day}" ]; then
+            # Copy and modify the wrf.job.template
             cp wrf.job.template wrf.job.1
             sed -i "s/MM/${month}/g" wrf.job.1 
             sed -i "s/DD/${day}/g" wrf.job.1 
             sed -i "s/YY/${year}/g" wrf.job.1 
             mv wrf.job.1 "${month}_${day}/wrf.job"
+
+            # Copy the wrf.sh file to the directory
             cp wrf.sh "${month}_${day}/wrf.sh"
         fi
     done
