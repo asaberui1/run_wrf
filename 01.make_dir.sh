@@ -39,45 +39,14 @@ days_in_month() {
     cal "$month" "$year" | awk 'NF {DAYS = $NF}; END {print DAYS}'
 }
 
-# Determine if the year is a leap year
-is_leap_year() {
-    year=$1
-    if (( (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0) )); then
-        return 0
-    else
-        return 1
-    fi
-}
-
 # Iterate over the specified months
-for ((m=start_month; m<=end_month; m++))
+for ((m=10#$start_month; m<=10#$end_month; m++))
 do
     month=$(printf "%02d" $m)
     days=$(days_in_month "$month" "$year")
-    
-    if [ "$m" -eq "$start_month" ] && [ "$m" -eq "$end_month" ]; then
-        for ((d=1; d<=$days; d++))
-        do
-            day=$(printf "%02d" $d)
-            bash wrf_setup -d "${month}_${day}"
-        done
-    elif [ "$m" -eq "$start_month" ]; then
-        for ((d=1; d<=$days; d++))
-        do
-            day=$(printf "%02d" $d)
-            bash wrf_setup -d "${month}_${day}"
-        done
-    elif [ "$m" -eq "$end_month" ]; then
-        for ((d=1; d<=$days; d++))
-        do
-            day=$(printf "%02d" $d)
-            bash wrf_setup -d "${month}_${day}"
-        done
-    else
-        for ((d=1; d<=$days; d++))
-        do
-            day=$(printf "%02d" $d)
-            bash wrf_setup -d "${month}_${day}"
-        done
-    fi
+    for ((d=1; d<=$days; d++))
+    do
+        day=$(printf "%02d" $d)
+        bash wrf_setup -d "${month}_${day}"
+    done
 done
