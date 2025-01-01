@@ -42,29 +42,40 @@ if [ -z "$path" ]; then
     exit 1
 fi
 
-for (( month=start_month; month<=end_month; month++ ))
+# Iterate over months and days
+for (( month=10#$start_month; month<=10#$end_month; month++ ))
 do
     m=$(printf "%02d" $month)
     for day in {01..31}
     do
-        ds=$(date -d "${year}/${m}/${day} -6hours" +%d)
-        ms=$(date -d "${year}/${m}/${day} -6hours" +%m)
-        de=$(date -d "${year}/${m}/${day} +1day" +%d)
-        me=$(date -d "${year}/${m}/${day} +1day" +%m)
-        ye=$(date -d "${year}/${m}/${day} +1day" +%Y)
-        echo "${ms}/${ds}" "${me}/${de}"
-        cp namelist.template namelist.input
-        sed -i "s/YYYY/${year}/g" namelist.input
-        sed -i "s/YYYE/${ye}/g" namelist.input
-        sed -i "s/DS/${ds}/g" namelist.input
-        sed -i "s/MS/${ms}/g" namelist.input
-        sed -i "s/DE/${de}/g" namelist.input
-        sed -i "s/ME/${me}/g" namelist.input
-        sed -i "s/PATHPATHPATH/${path_new}/g" namelist.input
-        mv namelist.input ${m}_${day}/namelist.input
+        # Check if the directory exists
+        if [ -d "${m}_${day}/" ]; then
+            ds=$(date -d "${year}/${m}/${day} -6hours" +%d 2>/dev/null)
+            ms=$(date -d "${year}/${m}/${day} -6hours" +%m 2>/dev/null)
+            de=$(date -d "${year}/${m}/${day} +1day" +%d 2>/dev/null)
+            me=$(date -d "${year}/${m}/${day} +1day" +%m 2>/dev/null)
+            ye=$(date -d "${year}/${m}/${day} +1day" +%Y 2>/dev/null)
+            
+            # Skip invalid dates (e.g., February 30)
+            if [ -z "$ds" ] || [ -z "$ms" ] || [ -z "$de" ] || [ -z "$me" ] || [ -z "$ye" ]; then
+                continue
+            fi
+            
+            echo "${ms}/${ds}" "${me}/${de}"
+            cp namelist.template namelist.input
+            sed -i "s/YYYY/${year}/g" namelist.input
+            sed -i "s/YYYE/${ye}/g" namelist.input
+            sed -i "s/DS/${ds}/g" namelist.input
+            sed -i "s/MS/${ms}/g" namelist.input
+            sed -i "s/DE/${de}/g" namelist.input
+            sed -i "s/ME/${me}/g" namelist.input
+            sed -i "s/PATHPATHPATH/${path_new}/g" namelist.input
+            mv namelist.input "${m}_${day}/namelist.input"
+        fi
     done
 done
 
+# Clean up namelist.input if it still exists
 if [ -f "./namelist.input" ]; then
     rm ./namelist.input
 fi
