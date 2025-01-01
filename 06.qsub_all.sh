@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 # Usage: bash script.sh --month=01(:12) --year=xxxx
 
 for arg in "$@"
@@ -22,7 +22,8 @@ if [ -z "$months" ]; then
     exit 1
 fi
 
-for (( mm=start_month; mm<=end_month; mm++ ))
+# Use 10# to ensure the month is treated as a decimal number
+for (( mm=10#$start_month; mm<=10#$end_month; mm++ ))
 do
     month=$(printf "%02d" $mm)
     for day in {01..31}
