@@ -1,5 +1,8 @@
 import netCDF4 as nc
 import argparse
+import os
+import numpy as np
+from datetime import date, timedelta
 
 def update_soil_moisture_data(year, start_month, end_month, max_domain):
     def is_leap_year(year):
@@ -11,49 +14,35 @@ def update_soil_moisture_data(year, start_month, end_month, max_domain):
             return 29
         return days_in_month[month - 1]
 
-    def get_sm_path(year, month, day, domain_number):
-        if domain_number == 1:
-            res = "36km"
-        elif domain_number == 2:
-            res = "12km"
-        else:
-            print("Invalid domain number!")
-
-        if day == 1:
-            if month == 1:
-                prev_month = 12
-                prev_year = year - 1
-            else:
-                prev_month = month - 1
-                prev_year = year
-            ld = get_days_in_month(prev_year, prev_month)
-            return f"/data8/hty/reproject_gdal/{year}/sm_{res}_{prev_year}{str(prev_month).zfill(2)}{str(ld).zfill(2)}19.nc"
-        else:
-            return f"/data8/hty/reproject_gdal/{year}/sm_{res}_{year}{str(month).zfill(2)}{str(day-1).zfill(2)}19.nc"
+    domain_config = {
+        1: {"res": "36km", "nx": 129, "ny": 199},
+        2: {"res": "12km", "nx": 204, "ny": 204},
+    }
 
     for month in range(start_month, end_month + 1):
         num_days = get_days_in_month(year, month)
         for dd in range(1, num_days + 1):
             for domain_number in range(1, max_domain + 1):
-                sm_path = get_sm_path(year, month, dd, domain_number)
-                wrf_path = f"./{str(month).zfill(2)}_{str(dd).zfill(2)}/wrfinput_d{str(domain_number).zfill(2)}"
-                wrf = nc.Dataset(wrf_path, mode='r+')
-                sm = nc.Dataset(sm_path)
-                if domain_number == 1:
-                    nx, ny = 129, 199
-                elif domain_number == 2:
-                    nx, ny = 204, 204
-                else:
-                    print("Invalid domain number!")
-                    break
+                config = domain_config.get(domain_number)
+                if config is None:
+                    raise ValueError(f"Invalid domain number: {domain_number}")
 
-                for x in range(nx):
-                    for y in range(ny):
-                        if wrf['LANDMASK'][0, x, y] == 1 and sm['Band1'][x, y] > 0:
-                            wrf['SMOIS'][0, 0, x, y] = sm['Band1'][x, y]
-                wrf.close()
-                sm.close()
-                print(f"Successfully changed surface soil moisture of {str(month).zfill(2)}_{str(dd).zfill(2)} for domain {str(domain_number).zfill(2)}")
+                res, nx, ny = config["res"], config["nx"], config["ny"]
+
+                prev_date = date(year, month, dd) - timedelta(days=1)
+                sm_path = f"/data8/hty/reproject_gdal/{prev_date.year}/sm_{res}_{prev_date.strftime('%Y%m%d')}19.nc"
+                wrf_path = f"./{str(month).zfill(2)}_{str(dd).zfill(2)}/wrfinput_d{str(domain_number).zfill(2)}"
+
+                if not os.path.exists(sm_path) or not os.path.exists(wrf_path):
+                    print(f"File not found: {sm_path} or {wrf_path}")
+                    continue
+
+                with nc.Dataset(wrf_path, mode='r+') as wrf, nc.Dataset(sm_path) as sm:
+                    land_mask = wrf['LANDMASK'][0, :, :]
+                    soil_moisture = sm['Band1'][:, :]
+                    wrf['SMOIS'][0, 0, :, :] = np.where((land_mask == 1) & (soil_moisture > 0), soil_moisture, wrf['SMOIS'][0, 0, :, :])
+
+                print(f"Successfully updated soil moisture for {str(month).zfill(2)}_{str(dd).zfill(2)}, domain {str(domain_number).zfill(2)}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
